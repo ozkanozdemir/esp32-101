@@ -1,5 +1,5 @@
 // Sohbet odası istemcisi. Kartla WebSocket (ws://<adres>/ws) üzerinden JSON mesajlaşır.
-// Mesaj biçimleri için src/main.cpp dosyasının başındaki açıklamaya bakın.
+// Mesaj biçimleri için src/chat.h dosyasının başındaki açıklamaya bakın.
 
 const $ = (id) => document.getElementById(id);
 
@@ -85,6 +85,7 @@ function handleMessage(msg) {
       for (const m of msg.messages) {
         addChat(m.from, m.text, new Date(Date.now() - m.ago * 1000));
       }
+      updateEmpty();
       break;
 
     case "users":
@@ -97,6 +98,11 @@ function handleMessage(msg) {
 
     case "system":
       addSystem(msg.text);
+      break;
+
+    case "led":
+      addLed(msg.from, msg.color);
+      setLedSwatch(msg.color);
       break;
 
     case "error":
@@ -131,8 +137,26 @@ function showChat() {
 
 function setOnline(online) {
   $("status-dot").classList.toggle("online", online);
-  $("login-status").textContent = online ? "Bağlandı" : "Bağlanıyor…";
+  $("login-dot").classList.toggle("online", online);
+  $("login-status").textContent = online ? "Karta bağlandı" : "Karta bağlanıyor…";
   $("login-button").disabled = !online;
+}
+
+// ---------- İsim rozetleri (avatar) ----------
+
+// Her isme sabit bir renk tonu: aynı isim herkeste aynı renkte görünür
+function nameHue(name) {
+  let hash = 0;
+  for (const ch of name) hash = (hash * 31 + ch.codePointAt(0)) >>> 0;
+  return hash % 360;
+}
+
+function makeAvatar(name) {
+  const el = document.createElement("span");
+  el.className = "avatar";
+  el.textContent = Array.from(name)[0] || "?";
+  el.setAttribute("aria-hidden", "true");
+  return el;
 }
 
 function renderUsers(names) {
@@ -142,29 +166,44 @@ function renderUsers(names) {
     .sort((a, b) => a.localeCompare(b, "tr"))
     .map((name) => {
       const li = document.createElement("li");
-      li.textContent = name === myName ? `${name} (sen)` : name;
+      li.style.setProperty("--hue", nameHue(name));
       if (name === myName) li.classList.add("me");
+      const label = document.createElement("span");
+      label.className = "name";
+      label.textContent = name;
+      li.append(makeAvatar(name), label);
       return li;
     });
   $("user-list").replaceChildren(...items);
 }
 
+// ---------- Mesaj listesi ----------
+
 function formatTime(date) {
   return date.toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" });
+}
+
+function updateEmpty() {
+  $("empty").hidden = $("messages").children.length > 0;
 }
 
 // Yeni mesaj gelince, kullanıcı zaten en alttaysa aşağı kaydır (yukarıda eski mesajları okuyorsa rahatsız etme)
 function appendMessage(li) {
   const list = $("messages");
-  const atBottom = list.scrollHeight - list.scrollTop - list.clientHeight < 60;
+  const atBottom = list.scrollHeight - list.scrollTop - list.clientHeight < 80;
   list.append(li);
   if (atBottom) list.scrollTop = list.scrollHeight;
+  updateEmpty();
 }
 
 // Not: Metinler her zaman textContent ile yazılır; böylece birinin mesajına yazdığı HTML/JS çalışmaz.
 function addChat(from, text, date) {
   const li = document.createElement("li");
   li.className = from === myName ? "msg mine" : "msg";
+  li.style.setProperty("--hue", nameHue(from));
+
+  const bubble = document.createElement("div");
+  bubble.className = "bubble";
 
   const fromEl = document.createElement("span");
   fromEl.className = "from";
@@ -178,7 +217,8 @@ function addChat(from, text, date) {
   timeEl.className = "time";
   timeEl.textContent = formatTime(date);
 
-  li.append(fromEl, textEl, timeEl);
+  bubble.append(fromEl, textEl, timeEl);
+  li.append(makeAvatar(from), bubble);
   appendMessage(li);
 }
 
@@ -188,6 +228,35 @@ function addSystem(text, isError = false) {
   li.textContent = text;
   appendMessage(li);
 }
+
+function addLed(from, color) {
+  const li = document.createElement("li");
+  li.className = "system";
+  const chip = document.createElement("span");
+  chip.className = "chip";
+  chip.style.background = color;
+  // "Ali LED'i ● rengine çevirdi" / kendimiz için "LED'i ● rengine çevirdiniz"
+  if (from === myName) li.append("LED'i", chip, "rengine çevirdiniz");
+  else li.append(`${from} LED'i`, chip, "rengine çevirdi");
+  appendMessage(li);
+}
+
+// ---------- LED renk seçici ----------
+
+function setLedSwatch(color) {
+  $("led-input").value = color;
+  document.querySelector(".led-picker").style.setProperty("--led", color);
+}
+
+// Seçici açıkken renk değiştikçe sadece düğmedeki önizlemeyi güncelle
+$("led-input").addEventListener("input", (event) => {
+  document.querySelector(".led-picker").style.setProperty("--led", event.target.value);
+});
+
+// Seçim bitince (seçici kapanınca) rengi karta gönder
+$("led-input").addEventListener("change", (event) => {
+  send({ type: "led", color: event.target.value });
+});
 
 // ---------- Kullanıcı etkileşimleri ----------
 

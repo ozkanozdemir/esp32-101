@@ -2,46 +2,116 @@
 <html lang="tr">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, interactive-widget=resizes-content">
-<title>ozkan.local</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+<meta name="theme-color" content="#0b1220">
+<title>ESP32 Sohbet Odası · ozkan.local</title>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
-  <!-- Giriş ekranı: kullanıcı adı alınır -->
+  <!-- İkonlar: sayfada <use href="#..."> ile tekrar kullanılır -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <symbol id="i-chip" viewBox="0 0 24 24"><rect x="7" y="7" width="10" height="10" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M10 3.5v3.5M14 3.5v3.5M10 17v3.5M14 17v3.5M3.5 10H7M3.5 14H7M17 10h3.5M17 14h3.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+    <symbol id="i-github" viewBox="0 0 16 16"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></symbol>
+    <symbol id="i-send" viewBox="0 0 24 24"><path d="M4 12l16-8-6 16-2.5-6.5L4 12z" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/></symbol>
+    <symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M2.5 20c.6-3.6 3.2-5.5 6.5-5.5s5.9 1.9 6.5 5.5M16 4.8a3.5 3.5 0 010 6.4M18 14.8c2 .7 3.2 2.4 3.5 5.2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+    <symbol id="i-logout" viewBox="0 0 24 24"><path d="M15 4h3a2 2 0 012 2v12a2 2 0 01-2 2h-3M10 16l-4-4 4-4M6 12h10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  </svg>
+
+  <!-- ===================== Giriş ekranı ===================== -->
   <section id="login" class="login">
-    <form id="login-form" class="login-card" autocomplete="off">
-      <h1>ozkan<span>.local</span></h1>
-      <p class="muted">Sohbet odasına katılmak için bir isim seçin.</p>
-      <input id="name-input" type="text" maxlength="20" placeholder="Kullanıcı adınız" required autofocus>
-      <button type="submit" id="login-button">Odaya gir</button>
-      <p id="login-error" class="error" hidden></p>
-      <p id="login-status" class="muted small">Bağlanıyor…</p>
-    </form>
+    <div class="login-grid">
+      <header class="intro">
+        <p class="eyebrow">
+          <svg class="icon"><use href="#i-chip"/></svg>
+          Dumlupınar Üniversitesi · Nesnelerin İnterneti
+        </p>
+        <h1>ESP32 <span>Sohbet Odası</span></h1>
+        <p class="lead">
+          Bu sayfa internetten değil, masadaki <strong>ESP32-S3</strong> kartından geliyor.
+          Kart kendi Wi-Fi ağını yayınlıyor, sayfayı sunuyor ve yazdığınız her mesajı
+          WebSocket ile odadaki herkese iletiyor.
+        </p>
+        <ul class="specs" aria-label="Kart özellikleri">
+          <li>ESP32-S3 · 240 MHz</li>
+          <li>16 MB Flash · 8 MB PSRAM</li>
+          <li>Wi-Fi erişim noktası</li>
+          <li>WebSocket + JSON</li>
+        </ul>
+      </header>
+
+      <form id="login-form" class="card login-card" autocomplete="off">
+        <h2>Odaya katıl</h2>
+        <p class="muted">Diğerlerinin sizi göreceği bir isim seçin.</p>
+        <label for="name-input" class="visually-hidden">Kullanıcı adı</label>
+        <input id="name-input" type="text" maxlength="20" placeholder="Kullanıcı adınız" required autofocus>
+        <button type="submit" id="login-button" class="primary">Odaya gir</button>
+        <p id="login-error" class="error" role="alert" hidden></p>
+        <p class="status-line"><span id="login-dot" class="dot"></span><span id="login-status">Karta bağlanıyor…</span></p>
+      </form>
+
+      <ol class="card steps" aria-label="Nasıl katılınır">
+        <li><span class="step-icon">1</span><div><strong>oozdemir</strong> Wi-Fi ağına bağlanın <span class="muted small">(şifre: 12345678)</span></div></li>
+        <li><span class="step-icon">2</span><div>Tarayıcıda <strong>ozkan.local</strong> adresini açın</div></li>
+        <li><span class="step-icon">3</span><div>Bir isim seçin ve sohbete başlayın</div></li>
+      </ol>
+
+      <aside class="card repo-card" aria-label="Proje kaynak kodu">
+        <img class="qr" src="/img/github-qr.svg" alt="GitHub deposunun QR kodu" width="112" height="112">
+        <div class="repo-text">
+          <p class="repo-title"><svg class="icon"><use href="#i-github"/></svg> Projeyi indirin</p>
+          <a class="repo-link" href="https://github.com/ozkanozdemir/esp32-101" target="_blank" rel="noopener">github.com/ozkanozdemir/esp32-101</a>
+          <p class="muted small">Kartın kodu ve bu sayfa açık kaynak. Kartın ağında internet olmadığı için QR kodu okutun ya da internete bağlıyken açın.</p>
+        </div>
+      </aside>
+    </div>
   </section>
 
-  <!-- Sohbet ekranı: odaya katıldıktan sonra görünür -->
+  <!-- ===================== Sohbet ekranı ===================== -->
   <section id="chat" class="chat" hidden>
     <header class="chat-header">
-      <div class="title">
-        <span id="status-dot" class="dot"></span>
-        <strong>Ortak oda</strong>
+      <div class="brand">
+        <span class="brand-mark"><svg class="icon"><use href="#i-chip"/></svg></span>
+        <div>
+          <strong>Ortak oda</strong>
+          <span class="brand-sub"><span id="status-dot" class="dot"></span>ESP32-S3 · ozkan.local</span>
+        </div>
       </div>
-      <button id="users-toggle" class="ghost" type="button" aria-expanded="false" aria-controls="users">
-        Çevrimiçi (<span id="user-count">0</span>)
-      </button>
-      <button id="leave-button" class="ghost" type="button">Çıkış</button>
+      <div class="header-actions">
+        <button id="users-toggle" class="ghost" type="button" aria-expanded="false" aria-controls="users">
+          <svg class="icon"><use href="#i-users"/></svg><span id="user-count">0</span>
+        </button>
+        <a class="ghost icon-only" href="https://github.com/ozkanozdemir/esp32-101" target="_blank" rel="noopener" aria-label="Projeyi GitHub'da aç" title="github.com/ozkanozdemir/esp32-101">
+          <svg class="icon"><use href="#i-github"/></svg>
+        </a>
+        <button id="leave-button" class="ghost" type="button" title="Odadan çık">
+          <svg class="icon"><use href="#i-logout"/></svg><span class="hide-sm">Çıkış</span>
+        </button>
+      </div>
     </header>
 
     <aside id="users" class="users">
       <h2>Çevrimiçi</h2>
       <ul id="user-list"></ul>
+      <a class="repo-mini" href="https://github.com/ozkanozdemir/esp32-101" target="_blank" rel="noopener">
+        <img src="/img/github-qr.svg" alt="" width="64" height="64">
+        <span><strong><svg class="icon"><use href="#i-github"/></svg> Projeyi indirin</strong>github.com/ozkanozdemir/esp32-101</span>
+      </a>
     </aside>
 
     <main class="messages-wrap">
       <ol id="messages" class="messages" aria-live="polite"></ol>
+      <p id="empty" class="empty">Henüz mesaj yok. İlk mesajı siz yazın! 👋</p>
       <form id="message-form" class="composer" autocomplete="off">
+        <!-- Karttaki LED'in rengini seçme düğmesi: dokununca telefonun/tarayıcının renk seçicisi açılır -->
+        <label class="led-picker" title="Karttaki LED'in rengini seçin">
+          <span class="led-swatch" aria-hidden="true"></span>
+          <span class="led-text">LED</span>
+          <input id="led-input" type="color" value="#2dd4bf" aria-label="Karttaki LED'in rengini seçin">
+        </label>
+        <label for="message-input" class="visually-hidden">Mesaj</label>
         <input id="message-input" type="text" maxlength="300" placeholder="Mesaj yazın…">
-        <button type="submit">Gönder</button>
+        <button type="submit" class="primary send" aria-label="Gönder"><svg class="icon"><use href="#i-send"/></svg></button>
       </form>
     </main>
   </section>

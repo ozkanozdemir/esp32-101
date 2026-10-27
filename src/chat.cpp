@@ -5,6 +5,8 @@
 
 // Bu dosyanın dışarıya açtığı fonksiyonların tanımları (setupChat, loopChat).
 #include "chat.h"
+// Karttaki renkli LED (renk seçimi, katılma/ayrılma yanıp sönmeleri).
+#include "led.h"
 
 // Arduino'nun temel fonksiyonlarını (Serial, String, millis vb.) projeye ekler.
 #include <Arduino.h>
@@ -29,6 +31,11 @@ const size_t MAX_HISTORY = 30;
 const size_t MAX_FRAME_BYTES = 2048;
 // Bağlantı kontrolü (ping) aralığı, saniye. Telefonu kapanan/uzaklaşan kişiler bu sayede listeden düşer.
 const uint16_t KEEPALIVE_SECONDS = 10;
+// Bir kişinin LED rengini en sık ne aralıkla değiştirebileceği (milisaniye). Renk seçiciyi
+// art arda oynatan biri LED'i ve odayı mesaja boğmasın diye.
+const uint32_t LED_MIN_INTERVAL_MS = 300;
+// Katılma (yeşil) ve ayrılma (kırmızı) yanıp sönmesinin parlaklığı (0-255).
+const uint8_t FLASH_LEVEL = 80;
 
 // "/ws" adresinde çalışan WebSocket sunucusu. Sayfalar buraya bağlanır.
 AsyncWebSocket ws("/ws");
@@ -39,6 +46,8 @@ struct User {
   String name;
   // Kullanıcıya özel gizli anahtar. Sayfa yenilenince aynı ismi geri alabilmesi için.
   String token;
+  // Bu kişinin LED rengini en son değiştirdiği an (çok sık değiştirmeyi engellemek için).
+  uint32_t lastLedAt = 0;
 // User yapısının sonu.
 };
 
@@ -296,6 +305,8 @@ void handleJoin(AsyncWebSocketClient *client, JsonDocument &doc) {
   if (isNew) {
     // ...herkese haber ver.
     broadcastSystem(name + " katıldı");
+    // LED kısa bir an sönüp yeşil yansın, sonra kaldığı renkten devam etsin.
+    ledFlash(0, FLASH_LEVEL, 0);
     // Seri porta da yaz.
     Serial.printf("Katildi: %s (%s)\n", name.c_str(), client->remoteIP().toString().c_str());
   // if bloğunun sonu.
@@ -356,6 +367,82 @@ void handleChat(AsyncWebSocketClient *client, JsonDocument &doc) {
 // handleChat fonksiyonunun sonu.
 }
 
+// "#ff8800" biçimindeki bir rengi kırmızı/yeşil/mavi değerlerine çevirir.
+// Biçim hatalıysa false döndürür.
+bool parseHexColor(const String &hex, uint8_t &r, uint8_t &g, uint8_t &b) {
+  // Tam 7 karakter olmalı ve "#" ile başlamalı.
+  if (hex.length() != 7 || hex[0] != '#') return false;
+  // "#"tan sonraki 6 karakterin her birine bak...
+  for (int i = 1; i < 7; i++) {
+    // ...hepsi onaltılık (0-9, a-f) rakam olmalı.
+    if (!isxdigit((unsigned char)hex[i])) return false;
+  // for döngüsünün sonu.
+  }
+  // "ff8800" kısmını tek bir sayıya çevir (16 tabanında).
+  uint32_t value = strtoul(hex.c_str() + 1, nullptr, 16);
+  // En soldaki iki hane kırmızı.
+  r = (value >> 16) & 0xFF;
+  // Ortadaki iki hane yeşil.
+  g = (value >> 8) & 0xFF;
+  // En sağdaki iki hane mavi.
+  b = value & 0xFF;
+  // Başarılı.
+  return true;
+// parseHexColor fonksiyonunun sonu.
+}
+
+// Sayfadan gelen {"type":"led","color":"#ff8800"} mesajını işler: karttaki LED'in renk geçişini
+// seçilen renkten sürdürür ve odadaki herkese kimin hangi rengi seçtiğini bildirir.
+void handleLed(AsyncWebSocketClient *client, JsonDocument &doc) {
+  // Bu bağlantının numarası.
+  uint32_t id = client->id();
+  // Bu bağlantının kullanıcı kaydını bul.
+  auto it = users.find(id);
+  // Odaya katılmamış biri LED'i değiştiremez.
+  if (it == users.end()) {
+    // Hata gönder.
+    sendError(id, "not_joined", "LED'i değiştirmek için önce odaya katılın.");
+    // Fonksiyondan çık.
+    return;
+  // if bloğunun sonu.
+  }
+  // Bu kişi LED'i çok kısa süre önce değiştirdiyse bu isteği sessizce yok say.
+  if (millis() - it->second.lastLedAt < LED_MIN_INTERVAL_MS) return;
+
+  // Gelen rengi al (örn. "#ff8800").
+  String color = doc["color"] | "";
+  // Renk değerleri.
+  uint8_t r, g, b;
+  // Biçim hatalıysa...
+  if (!parseHexColor(color, r, g, b)) {
+    // ...hata gönder.
+    sendError(id, "invalid_color", "Geçersiz renk.");
+    // Fonksiyondan çık.
+    return;
+  // if bloğunun sonu.
+  }
+  // Değiştirme zamanını kaydet.
+  it->second.lastLedAt = millis();
+  // LED'in renk geçişini bu renkten sürdür.
+  ledSetRainbowColor(r, g, b);
+
+  // Odadakilere haber vermek için mesajı hazırla.
+  JsonDocument out;
+  // Mesaj türü: LED rengi değişti.
+  out["type"] = "led";
+  // Rengi seçen kişi.
+  out["from"] = it->second.name;
+  // Seçilen renk (küçük harfe çevrilmiş).
+  color.toLowerCase();
+  // Renk.
+  out["color"] = color;
+  // Odadaki herkese gönder.
+  broadcast(out);
+  // Seri porta yaz.
+  Serial.printf("LED: %s -> %s\n", it->second.name.c_str(), color.c_str());
+// handleLed fonksiyonunun sonu.
+}
+
 // Bir kullanıcıyı odadan hemen çıkarır: isim listeden kalkar, herkese "... ayrıldı" yazılır.
 // "Çıkış"a basınca ({"type":"leave"}) ve bağlantı kopunca (tarayıcı/sekme kapatma,
 // sayfadan ayrılma, Wi-Fi'dan çıkma) çağrılır.
@@ -372,6 +459,8 @@ void removeUser(uint32_t clientId) {
   broadcastSystem(name + " ayrıldı");
   // Güncel listeyi gönder.
   broadcastUsers();
+  // LED kısa bir an sönüp kırmızı yansın, sonra kaldığı renkten devam etsin.
+  ledFlash(FLASH_LEVEL, 0, 0);
   // Seri porta yaz.
   Serial.printf("Ayrildi: %s\n", name.c_str());
 // removeUser fonksiyonunun sonu.
@@ -417,6 +506,10 @@ void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventTyp
     } else if (msgType == "leave") {
       // ...kişiyi hemen odadan çıkar.
       removeUser(client->id());
+    // LED rengi seçimiyse...
+    } else if (msgType == "led") {
+      // ...LED'i o renkten sürdür.
+      handleLed(client, doc);
     // if/else bloğunun sonu.
     }
   // Olay türü kontrollerinin sonu.

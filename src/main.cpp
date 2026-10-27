@@ -9,6 +9,7 @@
 //   main.cpp        -> Wi-Fi yayını, ozkan.local adı (DNS/mDNS), açılış (bu dosya)
 //   web_server.cpp  -> web sunucusu: site dosyalarını sunar
 //   chat.cpp        -> sohbet odası: WebSocket, kullanıcılar, mesajlar
+//   led.cpp         -> karttaki renkli LED: durum renkleri ve yavaş renk geçişi
 // =====================================================================
 
 // Arduino'nun temel fonksiyonlarını (Serial, delay, String vb.) projeye ekler.
@@ -22,15 +23,10 @@
 // Wi-Fi kütüphanesi. Kartın Wi-Fi yayını yapmasını sağlar.
 #include <WiFi.h>
 
+// Karttaki renkli LED (ledSetColor, ledStartRainbow, loopLed).
+#include "led.h"
 // Web sunucusu (setupWebServer, loopWebServer).
 #include "web_server.h"
-
-// Kartın üzerindeki renkli LED'in pini. Kütüphane zaten tanımladıysa ona dokunma.
-#ifndef RGB_BUILTIN
-// Tanımlı değilse 48 numaralı pini kullan (yanmazsa 38 deneyin).
-#define RGB_BUILTIN 48
-// #ifndef bloğunun sonu.
-#endif
 
 // Yayınlanacak Wi-Fi ağının adı.
 const char *AP_SSID = "oozdemir";
@@ -58,7 +54,7 @@ void setup() {
   // USB seri bağlantının kurulması için 1 saniye bekle.
   delay(1000);
   // LED'i turuncu yak: "açılıyor".
-  rgbLedWrite(RGB_BUILTIN, 32, 16, 0);
+  ledSetColor(32, 16, 0);
 
   // Dosya alanını bağla; başarısızsa...
   if (!LittleFS.begin()) {
@@ -75,8 +71,8 @@ void setup() {
   if (!WiFi.softAP(AP_SSID, AP_PASSWORD, 1, 0, AP_MAX_CLIENTS)) {
     // ...hata yaz.
     Serial.println("Wi-Fi yayini baslatilamadi");
-    // LED'i kırmızı yak: "hata".
-    rgbLedWrite(RGB_BUILTIN, 32, 0, 0);
+    // LED'i kırmızı yak: "hata" (renk geçişi başlamaz, kırmızı kalır).
+    ledSetColor(32, 0, 0);
     // Gerisini çalıştırma.
     return;
   // if bloğunun sonu.
@@ -105,17 +101,19 @@ void setup() {
   Serial.printf("Wi-Fi yayini: %s  adres: http://%s.local (http://%s)\n", AP_SSID, HOSTNAME,
                 // IP adresini yazıya çevir.
                 apIP.toString().c_str());
-  // LED'i mavi yak: "hazır".
-  rgbLedWrite(RGB_BUILTIN, 0, 0, 32);
+  // Kart hazır: LED tüm renkleri yavaşça dolaşmaya başlasın.
+  ledStartRainbow();
 // setup fonksiyonunun sonu.
 }
 
 // loop(): setup()'tan sonra sürekli tekrar eder. Web sunucusu ve WebSocket kendi arka plan
-// görevlerinde çalıştığı için burada sadece DNS ve düzenli temizlik işi var.
+// görevlerinde çalıştığı için burada sadece DNS, LED ve düzenli temizlik işi var.
 void loop() {
   // Gelen bir DNS sorusu varsa cevapla.
   dnsServer.processNextRequest();
   // Web sunucusunun ve sohbetin düzenli işleri.
   loopWebServer();
+  // LED'in renk geçişini ilerlet.
+  loopLed();
 // loop fonksiyonunun sonu.
 }

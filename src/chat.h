@@ -9,11 +9,13 @@
 //   Sayfa -> kart:  {"type":"join","name":"Ali","token":"..."}   odaya katıl
 //                   {"type":"chat","text":"Merhaba"}              mesaj gönder
 //                   {"type":"leave"}                              odadan çık
+//                   {"type":"led","color":"#ff8800"}              LED rengini seç
 //   Kart -> sayfa:  {"type":"welcome","name":"Ali","token":"..."} katılım onayı
 //                   {"type":"history","messages":[...]}            son mesajlar
 //                   {"type":"users","users":["Ali","Ayşe"]}        odadakiler
 //                   {"type":"chat","from":"Ali","text":"Merhaba"}  yeni mesaj
 //                   {"type":"system","text":"Ali katıldı"}          bilgi mesajı
+//                   {"type":"led","from":"Ali","color":"#ff8800"}  LED rengi değişti
 //                   {"type":"error","code":"...","text":"..."}     hata
 //
 // Kodun kendisi chat.cpp dosyasında. Bu dosya sadece dışarıdan (web_server.cpp)

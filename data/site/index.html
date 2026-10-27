@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, interactive-widget=resizes-content">
+<title>ozkan.local</title>
+<link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <!-- Giriş ekranı: kullanıcı adı alınır -->
+  <section id="login" class="login">
+    <form id="login-form" class="login-card" autocomplete="off">
+      <h1>ozkan<span>.local</span></h1>
+      <p class="muted">Sohbet odasına katılmak için bir isim seçin.</p>
+      <input id="name-input" type="text" maxlength="20" placeholder="Kullanıcı adınız" required autofocus>
+      <button type="submit" id="login-button">Odaya gir</button>
+      <p id="login-error" class="error" hidden></p>
+      <p id="login-status" class="muted small">Bağlanıyor…</p>
+    </form>
+  </section>
+
+  <!-- Sohbet ekranı: odaya katıldıktan sonra görünür -->
+  <section id="chat" class="chat" hidden>
+    <header class="chat-header">
+      <div class="title">
+        <span id="status-dot" class="dot"></span>
+        <strong>Ortak oda</strong>
+      </div>
+      <button id="users-toggle" class="ghost" type="button" aria-expanded="false" aria-controls="users">
+        Çevrimiçi (<span id="user-count">0</span>)
+      </button>
+      <button id="leave-button" class="ghost" type="button">Çıkış</button>
+    </header>
+
+    <aside id="users" class="users">
+      <h2>Çevrimiçi</h2>
+      <ul id="user-list"></ul>
+    </aside>
+
+    <main class="messages-wrap">
+      <ol id="messages" class="messages" aria-live="polite"></ol>
+      <form id="message-form" class="composer" autocomplete="off">
+        <input id="message-input" type="text" maxlength="300" placeholder="Mesaj yazın…">
+        <button type="submit">Gönder</button>
+      </form>
+    </main>
+  </section>
+
+  <script src="/js/app.js"></script>
+</body>
+</html>

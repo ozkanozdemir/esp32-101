@@ -7,6 +7,8 @@
 #include "chat.h"
 // Karttaki renkli LED (renk seçimi, katılma/ayrılma yanıp sönmeleri).
 #include "led.h"
+// Terminale mesaj yazma ("USB" ve "COM" girişlerine birden).
+#include "log.h"
 
 // Arduino'nun temel fonksiyonlarını (Serial, String, millis vb.) projeye ekler.
 #include <Arduino.h>
@@ -308,7 +310,7 @@ void handleJoin(AsyncWebSocketClient *client, JsonDocument &doc) {
     // LED kısa bir an sönüp yeşil yansın, sonra kaldığı renkten devam etsin.
     ledFlash(0, FLASH_LEVEL, 0);
     // Seri porta da yaz.
-    Serial.printf("Katildi: %s (%s)\n", name.c_str(), client->remoteIP().toString().c_str());
+    logf("Katildi: %s (%s)\n", name.c_str(), client->remoteIP().toString().c_str());
   // if bloğunun sonu.
   }
   // Herkese güncel kullanıcı listesini gönder.
@@ -439,7 +441,7 @@ void handleLed(AsyncWebSocketClient *client, JsonDocument &doc) {
   // Odadaki herkese gönder.
   broadcast(out);
   // Seri porta yaz.
-  Serial.printf("LED: %s -> %s\n", it->second.name.c_str(), color.c_str());
+  logf("LED: %s -> %s\n", it->second.name.c_str(), color.c_str());
 // handleLed fonksiyonunun sonu.
 }
 
@@ -462,7 +464,7 @@ void removeUser(uint32_t clientId) {
   // LED kısa bir an sönüp kırmızı yansın, sonra kaldığı renkten devam etsin.
   ledFlash(FLASH_LEVEL, 0, 0);
   // Seri porta yaz.
-  Serial.printf("Ayrildi: %s\n", name.c_str());
+  logf("Ayrildi: %s\n", name.c_str());
 // removeUser fonksiyonunun sonu.
 }
 

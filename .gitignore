@@ -9,3 +9,6 @@
 
 # macOS
 .DS_Store
+
+# Modemin ağ adı ve şifresi (örneği: src/secrets.example.h)
+src/secrets.h

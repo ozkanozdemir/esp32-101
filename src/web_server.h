@@ -10,7 +10,7 @@
 #pragma once
 
 // Web sunucusunu (site dosyaları + sohbet WebSocket'i) hazırlayıp başlatır.
-// LittleFS bağlandıktan ve Wi-Fi yayını başladıktan sonra çağrılmalı.
+// LittleFS bağlandıktan ve Wi-Fi başlatıldıktan sonra çağrılmalı.
 void setupWebServer();
 
 // Web sunucusunun düzenli yapılması gereken işleri. loop() içinden çağrılır.

@@ -29,13 +29,13 @@
         <h1>ESP32 <span>Sohbet Odası</span></h1>
         <p class="lead">
           Bu sayfa internetten değil, masadaki <strong>ESP32-S3</strong> kartından geliyor.
-          Kart kendi Wi-Fi ağını yayınlıyor, sayfayı sunuyor ve yazdığınız her mesajı
+          Kart sınıftaki modeme bağlı; sayfayı kendisi sunuyor ve yazdığınız her mesajı
           WebSocket ile odadaki herkese iletiyor.
         </p>
         <ul class="specs" aria-label="Kart özellikleri">
           <li>ESP32-S3 · 240 MHz</li>
           <li>16 MB Flash · 8 MB PSRAM</li>
-          <li>Wi-Fi erişim noktası</li>
+          <li>Wi-Fi · web sunucusu</li>
           <li>WebSocket + JSON</li>
         </ul>
       </header>
@@ -51,8 +51,8 @@
       </form>
 
       <ol class="card steps" aria-label="Nasıl katılınır">
-        <li><span class="step-icon">1</span><div><strong>oozdemir</strong> Wi-Fi ağına bağlanın <span class="muted small">(şifre: 12345678)</span></div></li>
-        <li><span class="step-icon">2</span><div>Tarayıcıda <strong>ozkan.local</strong> adresini açın</div></li>
+        <li><span class="step-icon">1</span><div>Kartın bağlı olduğu <strong>modemin Wi-Fi ağına</strong> bağlanın</div></li>
+        <li><span class="step-icon">2</span><div>Tarayıcıda <strong id="site-address">kartın IP adresini</strong> açın</div></li>
         <li><span class="step-icon">3</span><div>Bir isim seçin ve sohbete başlayın</div></li>
       </ol>
 
@@ -61,7 +61,7 @@
         <div class="repo-text">
           <p class="repo-title"><svg class="icon"><use href="#i-github"/></svg> Projeyi indirin</p>
           <a class="repo-link" href="https://github.com/ozkanozdemir/esp32-101" target="_blank" rel="noopener">github.com/ozkanozdemir/esp32-101</a>
-          <p class="muted small">Kartın kodu ve bu sayfa açık kaynak. Kartın ağında internet olmadığı için QR kodu okutun ya da internete bağlıyken açın.</p>
+          <p class="muted small">Kartın kodu ve bu sayfa açık kaynak. Telefonunuzla QR kodu okutarak açabilirsiniz.</p>
         </div>
       </aside>
     </div>
@@ -74,7 +74,7 @@
         <span class="brand-mark"><svg class="icon"><use href="#i-chip"/></svg></span>
         <div>
           <strong>Ortak oda</strong>
-          <span class="brand-sub"><span id="status-dot" class="dot"></span>ESP32-S3 · ozkan.local</span>
+          <span class="brand-sub"><span id="status-dot" class="dot"></span>ESP32-S3 · <span id="header-address">ozkan.local</span></span>
         </div>
       </div>
       <div class="header-actions">

@@ -296,6 +296,10 @@ $("users-toggle").addEventListener("click", () => {
 
 // ---------- Başlangıç ----------
 
+// Sayfanın açıldığı adresi (kartın IP'si ya da ozkan.local) göster; öğrenciler birbirine söyleyebilsin
+$("site-address").textContent = location.host;
+$("header-address").textContent = location.host;
+
 // Sayfa yenilendiyse (bu sekmede isim ve anahtar varsa) kullanıcıyı aynı isimle odaya geri al
 const sessionName = load(sessionStorage, SESSION_NAME_KEY);
 wantJoin = Boolean(sessionName && load(sessionStorage, TOKEN_KEY));

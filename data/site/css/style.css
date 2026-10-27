@@ -592,12 +592,17 @@ button { cursor: pointer; }
 .composer input { border-radius: 999px; padding-left: 18px; }
 
 .send {
+  /* flex: none -> dar ekranda mesaj kutusu düğmeyi sıkıştırıp ovalleştirmesin */
+  flex: none;
   width: 48px;
   height: 48px;
   padding: 0;
   border-radius: 50%;
   font-size: 20px;
 }
+
+/* Uçak sağa baktığı için gözle ortalı görünsün diye hafifçe sağa kaydır */
+.send .icon { transform: translateX(1px); }
 
 /* LED renk seçici: gökkuşağı halkalı, içi seçilen renkte bir düğme */
 .led-picker {

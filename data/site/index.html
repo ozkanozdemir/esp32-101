@@ -29,13 +29,13 @@
         <h1>ESP32 <span>Sohbet Odası</span></h1>
         <p class="lead">
           Bu sayfa internetten değil, masadaki <strong>ESP32-S3</strong> kartından geliyor.
-          Kart sınıftaki modeme bağlı; sayfayı kendisi sunuyor ve yazdığınız her mesajı
+          Kart kendi Wi-Fi ağını yayınlıyor, sayfayı sunuyor ve yazdığınız her mesajı
           WebSocket ile odadaki herkese iletiyor.
         </p>
         <ul class="specs" aria-label="Kart özellikleri">
           <li>ESP32-S3 · 240 MHz</li>
           <li>16 MB Flash · 8 MB PSRAM</li>
-          <li>Wi-Fi · web sunucusu</li>
+          <li>Wi-Fi erişim noktası</li>
           <li>WebSocket + JSON</li>
         </ul>
       </header>
@@ -51,8 +51,8 @@
       </form>
 
       <ol class="card steps" aria-label="Nasıl katılınır">
-        <li><span class="step-icon">1</span><div>Kartın bağlı olduğu <strong>modemin Wi-Fi ağına</strong> bağlanın</div></li>
-        <li><span class="step-icon">2</span><div>Tarayıcıda <strong id="site-address">kartın IP adresini</strong> açın</div></li>
+        <li><span class="step-icon">1</span><div><strong>oozdemir</strong> Wi-Fi ağına bağlanın <span class="muted small">(şifre: 12345678)</span></div></li>
+        <li><span class="step-icon">2</span><div>Tarayıcıda <strong id="site-address">ozkan.local</strong> adresini açın</div></li>
         <li><span class="step-icon">3</span><div>Bir isim seçin ve sohbete başlayın</div></li>
       </ol>
 
